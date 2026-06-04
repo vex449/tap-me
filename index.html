@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open in browser</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .card {
+      max-width: 460px;
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 28px;
+      padding: 36px 32px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 50px rgba(0,0,0,0.4);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    }
+    h1 { 
+      font-size: 31px; 
+      margin-bottom: 16px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+    p { 
+      font-size: 17.5px; 
+      line-height: 1.55; 
+      opacity: .92;
+    }
+    .steps { 
+      margin-top: 28px; 
+      text-align: left; 
+      font-size: 19.5px; 
+      line-height: 1.95; 
+    }
+    .icon { 
+      font-size: 58px; 
+      margin-bottom: 22px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    }
+    .loader {
+      margin: 28px auto 0;
+      width: 44px; 
+      height: 44px;
+      border: 4px solid rgba(255,255,255,.22);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+   
+    @keyframes spin { 
+      to { transform: rotate(360deg);} 
+    }
+
+    /* Легка анімація появи */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .card {
+      animation: fadeIn 0.6s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">↗️</div>
+    <h1 id="title"></h1>
+    <p id="desc"></p>
+    <div class="steps" id="steps"></div>
+    <div class="loader" id="loader"></div>
+  </div>
+
+<script>
+const REDIRECT_URL = 'https://tone.affomelody.com/click?pid=122199&offer_id=25&sub2=Anna';
+const i18n = {
+  en:{t:'Open in browser',d:'To continue, open this link in your external browser.',s:['Tap ⋯ in the top-right corner','Choose "Open in browser"','Wait for automatic redirect']},
+  uk:{t:'Відкрий у браузері',d:'Щоб продовжити, відкрий це посилання у зовнішньому браузері.',s:['Натисни ⋯ у верхньому правому куті','Обери "Відкрити у браузері"','Зачекай автоматичний перехід']},
+  de:{t:'Im Browser öffnen',d:'Öffne diesen Link im externen Browser.',s:['Tippe auf ⋯ oben rechts','Wähle „Im Browser öffnen“','Warte auf die automatische Weiterleitung']},
+  pl:{t:'Otwórz w przeglądarce',d:'Aby kontynuować, otwórz link w zewnętrznej przeglądarce.',s:['Kliknij ⋯ w prawym górnym rogu','Wybierz „Otwórz w przeglądarce”','Poczekaj na przekierowanie']},
+  fr:{t:'Ouvrir dans le navigateur',d:'Ouvrez ce lien dans votre navigateur externe.',s:['Appuyez sur ⋯ en haut à droite','Choisissez « Ouvrir dans le navigateur »','Attendez la redirection']},
+  da:{t:'Åbn i browser',d:'Åbn dette link i din eksterne browser.',s:['Tryk på ⋯ øverst til højre','Vælg "Åbn i browser"','Vent på viderestilling']},
+  no:{t:'Åpne i nettleser',d:'Åpne denne lenken i ekstern nettleser.',s:['Trykk på ⋯ øverst til høyre','Velg "Åpne i nettleser"','Vent på videresending']},
+  nl:{t:'Open in browser',d:'Open deze link in je externe browser.',s:['Tik op ⋯ rechtsboven','Kies "Open in browser"','Wacht op redirect']},
+  sv:{t:'Öppna i webbläsare',d:'Öppna länken i extern webbläsare.',s:['Tryck på ⋯ uppe till höger','Välj "Öppna i webbläsare"','Vänta på omdirigering']},
+  et:{t:'Ava brauseris',d:'Ava see link välises brauseris.',s:['Vajuta ⋯ paremas ülanurgas','Vali "Ava brauseris"','Oota ümbersuunamist']},
+  it:{t:'Apri nel browser',d:'Apri questo link nel browser esterno.',s:['Tocca ⋯ in alto a destra','Scegli "Apri nel browser"','Attendi il reindirizzamento']},
+  es:{t:'Abrir en navegador',d:'Abre este enlace en tu navegador externo.',s:['Pulsa ⋯ arriba a la derecha','Elige "Abrir en navegador"','Espera la redirección']},
+  'de-ch':{t:'Im Browser öffnen',d:'Öffne diesen Link im externen Browser.',s:['Tippe auf ⋯ oben rechts','Wähle „Im Browser öffnen“','Warte auf die automatische Weiterleitung']}
+};
+function detectLang(){
+  let l=(navigator.language||'en').toLowerCase();
+  if(l.startsWith('de-ch')) return 'de-ch';
+  let code=l.split('-')[0];
+  return i18n[code] ? code : 'en';
+}
+function applyLang(){
+  const lang = detectLang();
+  const tr=i18n[lang];
+  document.documentElement.lang = lang;
+  document.title = tr.t;
+  document.getElementById('title').innerText = tr.t;
+  document.getElementById('desc').innerText = tr.d;
+  document.getElementById('steps').innerHTML = `1. ${tr.s[0]}<br>2. ${tr.s[1]}<br>3. ${tr.s[2]}`;
+}
+function isTikTokWebView(){
+  const ua=navigator.userAgent||'';
+  return /TikTok|musical_ly|BytedanceWebview/i.test(ua);
+}
+function redirectNow(){
+  document.getElementById('title').innerText='Redirecting...';
+  document.getElementById('desc').innerText='Opening destination...';
+  document.getElementById('steps').style.display='none';
+ 
+  document.getElementById('loader').style.display='block';
+  setTimeout(()=>window.location.replace(REDIRECT_URL),800);
+}
+applyLang();
+if(!isTikTokWebView()) redirectNow();
+</script>
+</body>
+</html>
